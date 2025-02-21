@@ -176,7 +176,7 @@ $(document).on("click",".myModule",function(){
 
 					var typeColumn = ["text","textarea","int","double","image","video","file","boolean","select",
 						"array","object","json","date","time","datetime","timestamp","code","link","color",
-						"money","password","email","relations"];
+						"money","password","email","relations","order","chatgpt"];
 					var selectColumn = [];
 
 					typeColumn.forEach((v,f)=>{
@@ -293,6 +293,8 @@ $(document).on("click",".myModule",function(){
 									<option value="password" ${selectColumn[20]}>Contraseña</option>
 									<option value="email" ${selectColumn[21]}>Email</option>
 									<option value="relations" ${selectColumn[22]}>Relaciones</option>
+									<option value="order" ${selectColumn[23]}>Ordenar</option>
+									<option value="chatgpt" ${selectColumn[24]}>ChatGPT</option>
 
 								</select>
 
@@ -532,6 +534,8 @@ $(document).on("click",".addColumn",function(){
 					<option value="password">Contraseña</option>
 					<option value="email">Email</option>
 					<option value="relations">Relaciones</option>
+					<option value="order">Ordenar</option>
+					<option value="chatgpt">ChatGPT</option>
 
 				</select>
 

@@ -3,7 +3,7 @@
 Blog
 ====================================== */
 
-$url = "blogs";
+$url = "blogs?orderBy=order_blog&orderMode=ASC";
 $method = "GET";
 $fields = array();
 

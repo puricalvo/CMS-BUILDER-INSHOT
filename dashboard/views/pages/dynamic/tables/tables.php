@@ -115,8 +115,7 @@ Cargamos el módulo tabla
 
 					<?php if ($_SESSION["admin"]->rol_admin == "superadmin" || $module->editable_module == 1): ?>
 
-						<a href="/<?php echo $module->url_page ?>/manage" class="btn btn-default btn-sm rounded 
-						backColor px-3 py-2">Agregar registro
+						<a href="/<?php echo $module->url_page ?>/manage" class="btn btn-default btn-sm rounded backColor px-3 py-2">Agregar registro
 						</a>
 						
 					<?php endif ?>
@@ -219,6 +218,7 @@ Cargamos el módulo tabla
 						</li>
 
 						<?php endif ?>
+
 					</ul>
 
 				</div>
@@ -299,15 +299,15 @@ Cargamos el módulo tabla
 	        	<table class="table" width="100%">
 	        		
 	        		<thead>
-
+	        			
 	        			<tr>
-	        				<th class="position-relative"># <i class="bi bi-arrow-down-short position-absolute orderFilter" 
-								orderBy="id_<?php echo $module->suffix_module ?>" orderMode="ASC" style="cursor: pointer;"></i></th>
 
-							<?php if ($_SESSION["admin"]->rol_admin == "superadmin" || $module->editable_module == 1): ?>
+	        				<th class="position-relative"># <i class="bi bi-arrow-down-short position-absolute orderFilter" orderBy="id_<?php echo $module->suffix_module ?>" orderMode="ASC" style="cursor: pointer;"></i></th>
+					        
+	        				<?php if ($_SESSION["admin"]->rol_admin == "superadmin" || $module->editable_module == 1): ?>
 					        <th>Sel.</th>  
-							<?php endif ?>
-
+					        <?php endif ?>
+					       
 					        <?php if (!empty($columns)): ?>
 
 					        	<?php foreach ($columns as $index => $item): ?>
@@ -326,7 +326,8 @@ Cargamos el módulo tabla
 					        						  $item->type_column == "date" ||
 					        						  $item->type_column == "time" || 
 					        						  $item->type_column == "datetime" || 
-					        						  $item->type_column == "link"  ): ?>
+					        						  $item->type_column == "link" ||
+					        						  $item->type_column == "order"    ): ?>
 					        					<i class="bi bi-arrow-down-short position-absolute orderFilter" orderBy="<?php echo $item->title_column ?>" orderMode="ASC" style="cursor: pointer;"></i>
 					        				<?php endif ?>
 					        					
@@ -356,16 +357,15 @@ Cargamos el módulo tabla
 
         						<td><?php echo ($key+1) ?></td>
 
-								<?php if ($_SESSION["admin"]->rol_admin == "superadmin" || $module->editable_module == 1): ?>
-
+        						<?php if ($_SESSION["admin"]->rol_admin == "superadmin" || $module->editable_module == 1): ?>
+        						
         						<td>
 		        					<div class="form-check formCheck">
-		        						<input class="form-check-input checkItem" type="checkbox" 
-											idItem="<?php echo base64_encode($value["id_".$module->suffix_module]) ?>">
+		        						<input class="form-check-input checkItem" type="checkbox" idItem="<?php echo base64_encode($value["id_".$module->suffix_module]) ?>">
 		        					</div>
 		        				</td>
 
-								<?php endif ?>
+		        				<?php endif ?>
 
 	        					<?php foreach ($columns as $index => $item): ?>
 
@@ -426,16 +426,14 @@ Cargamos el módulo tabla
 
 											if ($_SESSION["admin"]->rol_admin == "superadmin" || $module->editable_module == 1){
 
-											echo '<div class="form-check form-switch">
-											<input class="form-check-input px-3 changeBoolean" type="checkbox" id="mySwtich" '.$checked.' idItem="'.base64_encode($value["id_".$module->suffix_module]).'" table="'.$module->title_module.'" suffix="'.$module->suffix_module.'" column="'.$item->title_column.'">
-											<label class="form-check-label ps-1 align-middle" for="mySwitch">'.$label.'</label>
-											</div>';
+												echo '<div class="form-check form-switch">
+												<input class="form-check-input px-3 changeBoolean" type="checkbox" id="mySwtich" '.$checked.' idItem="'.base64_encode($value["id_".$module->suffix_module]).'" table="'.$module->title_module.'" suffix="'.$module->suffix_module.'" column="'.$item->title_column.'">
+												<label class="form-check-label ps-1 align-middle" for="mySwitch">'.$label.'</label>
+												</div>';
 
-											}else {
+											}else{
 
-												echo '
-													<label class="form-check-label ps-1 align-middle" for="mySwitch">'.$label.'</label>';
-
+												echo '<label class="form-check-label ps-1 align-middle" for="mySwitch">'.$label.'</label>';
 											}
 
 										/*=============================================
@@ -489,27 +487,42 @@ Cargamos el módulo tabla
 
 									    	echo '$'.number_format(urldecode($value[$item->title_column]),2);
 
-										/*=============================================
-										Contenido tipo Relaciones entre tablas
+									    /*=============================================
+										Contenido tipo Relaciones
 										=============================================*/
 
 										}else if($item->type_column == "relations"){
 
 											if($item->matrix_column != null && $value[$item->title_column] > 0){
-												
-												$url = "relations?rel=modules,pages&type=module,page&linkTo=type_module,title_module&equalTo=tables,"
-												      .$item->matrix_column."&select=url_page";
+
+												$url = "relations?rel=modules,pages&type=module,page&linkTo=type_module,title_module&equalTo=tables,".$item->matrix_column."&select=url_page,suffix_module";
 												$method = "GET";
 												$array = array();
 
-												$urlPage = CurlController::request($url, $method, $fields)->results[0]->url_page;
+												$urlPage = CurlController::request($url,$method,$fields)->results[0]->url_page;
+												$suffixModule = CurlController::request($url,$method,$fields)->results[0]->suffix_module;
 
-												echo '<a href="'.$urlPage.'/manage/'.base64_encode($value[$item->title_column]).'" target="_blank" class="badge badge-default border rounded bg-indigo">'.$value[$item->title_column].'</a>';
+												$url = $item->matrix_column.'?linkTo=id_'.$suffixModule."&equalTo=".$value[$item->title_column];
+												$relation = CurlController::request($url,$method,$fields);
+												$arrayRelation  = (array)$relation->results[0];
+						
+												echo '<a href="'.$urlPage.'/manage/'.base64_encode($value[$item->title_column]).'" target="_blank" class="badge badge-default border rounded bg-indigo">'.urldecode($arrayRelation[array_keys($arrayRelation)[1]]).'</a>';
 
 											}else{
 
 												echo $value[$item->title_column]; 
+
 											}
+
+										/*=============================================
+										Contenido tipo Órden
+										=============================================*/
+
+										}else if($item->type_column == "order"){
+
+
+											echo '<input type="number" class="form-control form-control-sm rounded changeOrder" value="'.$value[$item->title_column].'" style="width:55px" idItem="'.base64_encode($value["id_".$module->suffix_module]).'" table="'.$module->title_module.'" suffix="'.$module->suffix_module.'" column="'.$item->title_column.'">';
+
 
 										}else{
 

@@ -38,9 +38,9 @@ Adicionar un nuevo objeto
 
 $(document).on("click",".addObject",function(){
 
-	var itemObjectLength = $(".itemObject").length;
+	var itemObjectLength = $(this).parent().find(".itemObject").length;
 	
-	$(".itemsObject:last").append($(".itemsObject .itemObject:first")[0].outerHTML.replace(/_0/g, "_"+itemObjectLength));
+	$(this).parent().find(".itemsObject:last").append($(this).parent().find(".itemsObject .itemObject:first")[0].outerHTML.replace(/_0/g, "_"+itemObjectLength));
 
 })
 
@@ -49,39 +49,29 @@ $(document).on("click",".addObject",function(){
 Quitar un objeto
 =============================================*/
 
-$(document).on("click",".removeObject",function(){
+function removeObject(column, position, event){
 
-	if($(this).attr("position") == "_0"){
+	if(position == "_0"){
 
 		fncToastr("error", "Debe existir un item de objeto");
 
 		return;
 	}
 
-	$(this).parent().parent().parent().remove();
+	$(event.target).parent().parent().parent().parent().remove();
 
-	changeItemObject();
+	changeItemObject(column);
 
-})
-
-/*=============================================
-Cuando ingresamos datos al objeto
-=============================================*/
-
-$(document).on("change",".changeItemObject",function(){
-
-	changeItemObject();
-
-})
+}
 
 /*=============================================
 Función cuando cambia el objeto
 =============================================*/
 
-function changeItemObject(){
+function changeItemObject(column){
 
-	var propertyObject = $(".propertyObject");
-	var valueObject = $(".valueObject");
+	var propertyObject = $(".propertyObject."+column);
+	var valueObject = $(".valueObject."+column);
 
 	var object = '{';
 
@@ -94,7 +84,7 @@ function changeItemObject(){
 	object = object.slice(0, -1);
 	object += '}';
 	
-	$("#"+$(propertyObject[0]).attr("titleColumn")).val(object);
+	$("#"+column).val(object);
 }
 
 /*=============================================
@@ -103,9 +93,9 @@ Adicionar un nuevo item para el json
 
 $(document).on("click",".addJson",function(){
 
-	var itemJsonLength = $(".itemJson").length;
+	var itemJsonLength = $(this).parent().find(".itemJson").length;
 	
-	$(".itemsJson").append($(".itemsJson .itemJson:first")[0].outerHTML.replace(/_0/g, "_"+itemJsonLength));
+	$(this).parent().find(".itemsJson:last").append($(this).parent().find(".itemsJson .itemJson:first")[0].outerHTML.replace(/_0/g, "_"+itemJsonLength));
 
 })
 
@@ -113,30 +103,20 @@ $(document).on("click",".addJson",function(){
 Quitar un objeto
 =============================================*/
 
-$(document).on("click",".removeJson",function(){
+function removeJson(column, position,event){
 
-	if($(this).attr("position") == "_0"){
+	if(position == "_0"){
 
 		fncToastr("error", "Debe existir un item de objeto");
 
 		return;
 	}
 
-	$(this).parent().parent().parent().remove();
+	$(event.target).parent().parent().parent().parent().remove();
 
-	changeItemJson();
+	changeItemJson(column);
 
-})
-
-/*=============================================
-Cuando ingresamos datos al Json
-=============================================*/
-
-$(document).on("change",".changeItemJson",function(){
-
-	changeItemJson();
-
-})
+}
 
 /*=============================================
 Adicionar un grupo de objetos
@@ -144,18 +124,18 @@ Adicionar un grupo de objetos
 
 $(document).on("click",".addJsonGroup",function(){
 
-	var jsonGroupLength = $(".jsonGroup").length;
+	var jsonGroupLength = $(this).parent().find(".jsonGroup").length;
 
-	$(".jsonGroup:last").after($(".jsonGroup:first")[0].outerHTML.replace(/0_/g, jsonGroupLength+"_"));
+	$(this).parent().find(".jsonGroup:last").after($(this).parent().find(".jsonGroup:first")[0].outerHTML.replace(/0_/g, jsonGroupLength+"_"));
 
 })
 
 /*=============================================
 Remover un grupo de objetos
 =============================================*/
-$(document).on("click",".removeJsonGroup",function(){
+function removeJsonGroup(column, position, event){
 
-	if($(".jsonGroup").length == 1){
+	if(position == "0_"){
 
 		fncToastr("error", "Debe existir un grupo de objetos");
 
@@ -163,26 +143,26 @@ $(document).on("click",".removeJsonGroup",function(){
 
 	}
 
-	$(this).parent().remove();
+	$(event.target).parent().parent().remove();
 
-	changeItemJson();
+	changeItemJson(column);
 
-})
+}
 
 /*=============================================
 Función cuando cambia el Json
 =============================================*/
 
-function changeItemJson(){
+function changeItemJson(column){
 
-	var jsonGroup = $(".jsonGroup");
+	var jsonGroup = $(".jsonGroup."+column);
 
 	var jSon = '[';
 
 	jsonGroup.each((f)=>{
 
-		var propertyJson = $("."+$(jsonGroup[f]).attr("position")+"propertyJson");
-		var valueJson = $("."+$(jsonGroup[f]).attr("position")+"valueJson");
+		var propertyJson = $("."+$(jsonGroup[f]).attr("position")+"propertyJson."+column);
+		var valueJson = $("."+$(jsonGroup[f]).attr("position")+"valueJson."+column);
 
 		jSon += '{';
 
@@ -200,7 +180,7 @@ function changeItemJson(){
 	jSon = jSon.slice(0, -1);
 	jSon += ']';
 	
-	$("#"+$(jsonGroup[0]).attr("titleColumn")).val(jSon);
+	$("#"+column).val(jSon);
 }
 
 /*=============================================
@@ -231,16 +211,18 @@ $(document).on("click",".myFiles",function(){
 })
 
 /*=============================================
-Cambiar la tabla de Relaciones
+Cambiar la tabla de relaciones
 =============================================*/
 
 $(document).on("change",".changeRelations",function(){
 
-	$(".selectRelations").html('');
+	var selectRelations = $(this).parent().find(".selectRelations");
+
+	$(selectRelations).html('');
 
 	var table = $(this).val();
 	var id_column = $(this).attr("idColumn");
-
+	
 	var data = new FormData();
 	data.append("table",table);
 	data.append("id_column",id_column);
@@ -254,23 +236,64 @@ $(document).on("change",".changeRelations",function(){
 		cache: false,
 		processData: false,
 		success: function (response){
-
-			if( JSON.parse(response).length > 0){
+			
+			if(JSON.parse(response).length > 0){
 
 				JSON.parse(response).forEach((e,i)=>{
 
-					$(".selectRelations").append(`
+					$(selectRelations).append(`
 
 						<option value="${Object.values(e)[0]}">${Object.values(e)[0]} - ${Object.values(e)[1]}</option>
-						
-					`)
-				
+
+					 `)
+
 				})
 
-			}
-
+			}	
+			
 		}
 
 	})
 
 })
+
+/*=============================================
+Actualizar la matriz de ChatGPT
+=============================================*/
+
+$(document).on("change",".changeChatGPT",function(){
+
+	fncMatPreloader("on");
+	fncSweetAlert("loading", "Esperando respuesta de ChatGPT...", "");
+
+	var matrix_prompt = $(this).val();
+	var id_prompt = $(this).attr("idPrompt");
+	var title_prompt = $(this).attr("titlePrompt");
+	
+	var data = new FormData();
+	data.append("matrix_prompt",matrix_prompt);
+	data.append("id_prompt",id_prompt);
+	data.append("token", localStorage.getItem("tokenAdmin"));
+
+	$.ajax({
+		url:"/ajax/dynamic-forms.ajax.php",
+		method: "POST",
+		data: data,
+		contentType: false,
+		cache: false,
+		processData: false,
+		success: function (response){
+
+			fncMatPreloader("off");
+			fncSweetAlert("close", ".", "");
+
+			$("#"+title_prompt).summernote('code', response);
+			
+		}
+
+	})
+
+})
+
+
+

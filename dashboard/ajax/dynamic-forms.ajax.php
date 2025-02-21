@@ -87,8 +87,49 @@ class DynamicFormsController{
 			}
 
 		}
+	
+	}
+/*=============================================
+	Actualizar matrix y Devolver consulta chatgpt
+	=============================================*/
 
-		
+	public $matrix_prompt;
+	public $id_prompt;
+
+	public function updateMatrixPrompt(){
+
+		$url = "columns?id=".$this->id_prompt."&nameId=id_column&token=".$this->token."&table=admins&suffix=admin";
+		$method = "PUT";
+		$fields = "matrix_column=".$this->matrix_prompt;
+
+		$updateMatrix = CurlController::request($url,$method,$fields);
+
+		if($updateMatrix->status == 200 && !empty($this->matrix_prompt)){
+
+			/*=============================================
+			Traer info del administrador
+			=============================================*/
+
+			$url = "admins?linkTo=token_admin&equalTo=".$this->token."&select=chatgpt_admin";
+			$method = "GET";
+			$fields = array();
+
+			$admin = CurlController::request($url,$method,$fields);
+
+			if($admin->status == 200){
+
+				$content = $this->matrix_prompt;
+				$token = json_decode($admin->results[0]->chatgpt_admin)->token;	
+				$org = json_decode($admin->results[0]->chatgpt_admin)->org;		
+
+				$chatGPT = CurlController::chatGPT($content,$token,$org);
+				
+				echo $chatGPT;
+			}
+
+		}
+
+
 	}
 }
 
@@ -117,3 +158,12 @@ if(isset($_POST["table"])){
 
 }
 
+if(isset($_POST["matrix_prompt"])){
+
+	$ajax = new DynamicFormsController();
+	$ajax -> matrix_prompt = $_POST["matrix_prompt"];
+	$ajax -> id_prompt = $_POST["id_prompt"];
+	$ajax -> token = $_POST["token"];
+	$ajax -> updateMatrixPrompt(); 
+
+}

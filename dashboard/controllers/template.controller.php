@@ -47,7 +47,7 @@ class TemplateController{
 
 		}
 
-		if($value == "int" || $value == "relations"){
+		if($value == "int" || $value == "relations" || $value == "order"){
 	       
 	       	$type = "INT NULL DEFAULT '0'";
 		
@@ -88,7 +88,7 @@ class TemplateController{
 	      	$type = "TIMESTAMP on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP";
 	    }
 
-	    if($value == "code"){
+	    if($value == "code" || $value == "chatgpt"){
 
 	       	$type = "LONGTEXT NULL DEFAULT NULL";
 	    

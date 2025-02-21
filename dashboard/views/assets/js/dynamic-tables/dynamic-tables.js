@@ -238,6 +238,12 @@ Cargar tabla con Ajax
 
 function loadAjaxTable(contentModule,orderBy,orderMode,limit,page,filter,search,between1,between2){
 
+	if(filter != "search"){
+
+		fncSweetAlert("loading", "Cargando información...", "");
+	
+	}
+
 	var data = new FormData();
 	data.append("contentModule", contentModule);
 	data.append("orderBy", orderBy);
@@ -257,6 +263,12 @@ function loadAjaxTable(contentModule,orderBy,orderMode,limit,page,filter,search,
 		cache: false,
 		processData: false,
 		success: function (response){ 
+
+			if(filter != "search"){
+
+				fncSweetAlert("close", "", "");
+
+			}
 
 			/*=============================================
 			Limpiar la selección de items
@@ -733,6 +745,47 @@ $(document).on("click",".mySelects",function(){
 
 		})
 
+
+	})
+
+})
+
+/*=============================================
+Cambiar el orden de un registro
+=============================================*/
+
+$(document).on("change",".changeOrder",function(){
+
+	var num = $(this).val();
+	var idItem = $(this).attr("idItem");
+	var table = $(this).attr("table");
+	var suffix = $(this).attr("suffix");
+	var column = $(this).attr("column");
+
+	var data = new FormData();
+	data.append("numOrder", num);
+	data.append("idItemOrder", idItem);
+	data.append("tableOrder", table);
+	data.append("suffixOrder", suffix);
+	data.append("columnOrder", column);
+	data.append("token", localStorage.getItem("tokenAdmin"));
+
+	$.ajax({
+
+		url:"/ajax/dynamic-tables.ajax.php",
+		method: "POST",
+		data: data,
+		contentType: false,
+		cache: false,
+		processData: false,
+		success: function (response){ 
+			
+			if(response == 200){
+
+				fncToastr("success", "El registro ha sido actualizado con éxito");
+			}
+
+		}    
 
 	})
 

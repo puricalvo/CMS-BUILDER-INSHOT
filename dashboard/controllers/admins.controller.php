@@ -10,12 +10,12 @@ class AdminsController{
 
 		if(isset($_POST["email_admin"])){
 
-			/* echo '<script>
+			echo '<script>
 
 				fncMatPreloader("on");
 				fncSweetAlert("loading", "Ingresando...", "");
 
-			</script>'; */
+			</script>';
 
 			$url = "admins?login=true&suffix=admin";
 			$method = "POST";
@@ -48,20 +48,58 @@ class AdminsController{
 				}
 
 				/*=============================================
-				Crear variable de Sesión
+				Generar y enviar código de seguridad al correo
 				=============================================*/
 
-				$_SESSION["admin"] = $login->results[0];
+				$securityCode = TemplateController::genPassword(6);
 
-				echo '<script>
+				$url = "admins?id=".$login->results[0]->id_admin."&nameId=id_admin&token=no&except=scode_admin";
+				$method = "PUT";
+				$fields = "scode_admin=".$securityCode;
 
-					localStorage.setItem("tokenAdmin","'.$login->results[0]->token_admin.'");
-					fncMatPreloader("off");
-					fncFormatInputs();
-					location.reload();
+				$updateAdmin = CurlController::request($url,$method,$fields);
 
-				</script>';
+				if($updateAdmin->status == 200){	
 
+					$subject = "Códido de seguridad para ingresar";
+					$email = $login->results[0]->email_admin;
+					$title = 'CÓDIGO DE SEGURIDAD';
+					$message = '<h4 style="font-weight: 100; color:#999; padding:0px 20px"><strong>Su código de seguridad: '.$securityCode.'</strong></4><h4 style="font-weight: 100; color:#999; padding:0px 20px">Ingrese nuevamente al sitio con este código de seguridad</4>';
+					$link = $_SERVER["REQUEST_SCHEME"]."://".$_SERVER["SERVER_NAME"]."?scode=".base64_encode($login->results[0]->email_admin);
+
+					$sendEmail = TemplateController::sendEmail($subject, $email, $title, $message, $link);
+
+					if($sendEmail == "ok"){
+
+						echo '<script>
+
+								fncFormatInputs();
+								fncMatPreloader("off");
+								fncSweetAlert("success", 
+								"Se ha enviado un código de seguridad para ingresar al sistema, por favor revise su correo electrónico o bandeja SPAM",
+								setTimeout(()=>window.location="'.$_SERVER["REQUEST_SCHEME"].'://'.$_SERVER["SERVER_NAME"].'?scode='.base64_encode($login->results[0]->email_admin).'",2000));
+
+							</script>
+						';
+
+						return;
+
+					}else{
+
+						echo '<script>
+
+							fncFormatInputs();
+							fncMatPreloader("off");
+							fncNotie("error", "'.$sendEmail.'");
+
+							</script>
+						';
+
+						return;
+
+					}
+
+				}
 
 			}else{
 
@@ -76,6 +114,70 @@ class AdminsController{
 				</script>';
 			}
 
+
+		}
+
+	}
+
+
+	/*=============================================
+	Validar código de seguridad
+	=============================================*/
+
+	public function securityCode(){
+
+		if(isset($_POST["scode_admin"])){
+
+			echo '
+
+			<script>
+
+				fncMatPreloader("on");
+			    fncSweetAlert("loading", "Procesando...", "");
+
+			</script>
+
+			';
+
+			/*=============================================
+			Validar admin
+			=============================================*/
+
+			$url = "admins?linkTo=scode_admin&equalTo=".$_POST["scode_admin"];
+			$method = "GET";
+			$fields = array();
+
+			$admin = CurlController::request($url,$method,$fields);
+			
+			if($admin->status == 200){
+
+				/*=============================================
+				Crear variable de Sesión
+				=============================================*/
+
+				$_SESSION["admin"] = $admin->results[0];
+
+				echo '<script>
+
+					localStorage.setItem("tokenAdmin","'.$admin->results[0]->token_admin.'");
+					fncMatPreloader("off");
+					fncFormatInputs();
+					location.reload();
+
+				</script>';
+
+			}else{
+
+				echo '<div class="alert alert-danger mt-3 rounded">Error al ingresar: Código de seguridad no coincide</div>
+
+				<script>
+
+					fncMatPreloader("off");
+					fncFormatInputs();
+					fncToastr("error", "Error al ingresar: Código de seguridad no coincide");
+
+				</script>';
+			}
 
 		}
 
@@ -191,90 +293,84 @@ class AdminsController{
 
 		if(isset($_POST["resetPassword"])){
 
-			 /* echo '<script>
+			echo '<script>
 
 				fncMatPreloader("on");
-			    fncSweetAlert("loading", "", "");
+				fncSweetAlert("loading", "", "");
 
-			</script>';  */
+			</script>';
 
-			/*====================================================
-			Pregunatmos primero si el usuario está en registrado
-			=====================================================*/
+			/*=============================================
+			Preguntamos primero si el usuario está registrado
+			=============================================*/	
 
 			$url = "admins?linkTo=email_admin&equalTo=".$_POST["resetPassword"]."&select=id_admin";
 			$method = "GET";
 			$fields = array();
 
 			$admin = CurlController::request($url,$method,$fields);
-
+			
 			if($admin->status == 200){
 
 				$newPassword = TemplateController::genPassword(11);
 				$crypt = crypt($newPassword, '$2a$07$azybxcags23425sdg23sdfhsd$');
 
-				/*====================================================
-				Actualizar contraseña en la base de datos
-				=====================================================*/
+				/*=============================================
+				Actualizar contraseña en base de datos
+				=============================================*/
 				$url = "admins?id=".$admin->results[0]->id_admin."&nameId=id_admin&token=no&except=password_admin";
 				$method = "PUT";
 				$fields = "password_admin=".$crypt;
 
 				$updatePassword = CurlController::request($url,$method,$fields);
 
-					if($updatePassword->status == 200){
+				if($updatePassword->status == 200){
 
-						$subject = "Solicitud de nueva contraseña";
-						$email = $_POST["resetPassword"];
-						$title = 'SOLICITUD DE NUEVO CONTRASEÑA';
-						$message = '<h4 style="font-weight: 100; color:#999; padding:0px 20px"><strong>Su nueva
-							contraseña: '.$newPassword.'</strong></h4><h4 style="font-weight: 100; color:#999; 
-							padding:0px 20px">Ingrese nuevamente al sitio con esta contraseña y recuerde cambiarla</h4>';
-						$link = $_SERVER["REQUEST_SCHEME"]."://".$_SERVER["SERVER_NAME"];
+					$subject = "Solicitud de nueva contraseña";
+					$email = $_POST["resetPassword"];
+					$title = 'SOLICITUD DE NUEVA CONTRASEÑA';
+					$message = '<h4 style="font-weight: 100; color:#999; padding:0px 20px"><strong>Su nueva contraseña: '.$newPassword.'</strong></4><h4 style="font-weight: 100; color:#999; padding:0px 20px"> Ingrese nuevamente al sitio con esta contraseña y recuerde cambiarla</4>';
+					$link = $_SERVER["REQUEST_SCHEME"]."://".$_SERVER["SERVER_NAME"];
 
+					$sendEmail = TemplateController::sendEmail($subject, $email, $title, $message, $link);
 
-						$sendEmail = TemplateController::sendEmail($subject, $email, $title, $message, $link);
+					if($sendEmail == "ok"){
 
-						if($sendEmail == "ok"){
-
-							echo '<script>
-
-									fncFormatInputs();
-									fncMatPreloader("off");
-									fncToastr("success", "Su nueva contraseña ha sido enviada con éxito, por favor revise su correo electrónico");
-
-								</script>
-							';
-
-
-
-						}else{
-							
-							echo '<script>
-
-									fncFormatInputs();
-									fncMatPreloader("off");
-									fncNotie("error", "'.$sendEmail.'");
-
-								</script>
-							';
-						}
-
-					}
-
-					}else{
 						echo '<script>
 
 								fncFormatInputs();
 								fncMatPreloader("off");
-								fncNotie("error", "El correo no existe en la base de datos");
+								fncToastr("success", "Su nueva contraseña ha sido enviada con éxito, por favor revise su correo electrónico");
 
 							</script>
 						';
 
+					}else{
+
+						echo '<script>
+
+							fncFormatInputs();
+							fncMatPreloader("off");
+							fncNotie("error", "'.$sendEmail.'");
+
+							</script>
+						';
 					}
-			} 
-			
+				}
+
+			}else{
+				
+				echo '<script>
+
+						fncFormatInputs();
+						fncMatPreloader("off");
+						fncNotie("error", "El correo no existe en la base de datos");
+
+					</script>
+				';
+
+			}
+		}
 	}
 
 }

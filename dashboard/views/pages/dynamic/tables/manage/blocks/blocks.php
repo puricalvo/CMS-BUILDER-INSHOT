@@ -126,6 +126,12 @@
 
 		include "forms/relations.php"; 
 
+		/*===================================================
+		Formulario de tipo Inteligencia Artificial ChatGPT
+		===================================================*/
+
+		include "forms/chatgpt.php"; 
+
 		?>
 
 		<div class="valid-feedback">Válido.</div>

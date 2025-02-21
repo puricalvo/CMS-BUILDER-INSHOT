@@ -1,3 +1,26 @@
+<?php 
+
+$securityCode = null;
+
+if(isset($_GET["scode"])){
+
+  $url = "admins?linkTo=email_admin&equalTo=".base64_decode($_GET["scode"]);
+  $method = "GET";
+  $fields = array();
+
+  $scode = CurlController::request($url, $method, $fields);
+
+  if($scode->status == 200){
+
+    $securityCode = $scode->results[0];
+    
+  }
+
+}
+
+?>
+
+
 <div class="container-fluid backgroundImage" <?php if (!empty($admin->back_admin)): ?>
 	style="background-image: url(<?php echo $admin->back_admin ?>)"
 <?php else: ?>
@@ -16,14 +39,16 @@
 
 				<hr>
 
+				<?php if (empty($securityCode)): ?>
+					
 				<div class="form-group mb-3">
 					
-					<label for="email_admin">Correo</label>
+					<label for="email_admin_login">Correo</label>
 
 					<input 
 					type="email"
 					class="form-control rounded"
-					id="email_admin"
+					id="email_admin_login"
 					name="email_admin"
 					placeholder="Escribe el correo"
 					required
@@ -57,7 +82,7 @@
 						>
 
 						<span class="input-group-text rounded-end">
-							<i class="viewPass bi bi-eye-slash " state="locked" style="cursor:pointer"></i>
+							<i class="viewPass bi bi-eye-slash" state="locked" style="cursor:pointer"></i>
 						</span>
 
 					</div>
@@ -73,16 +98,48 @@
 					<label class="form-check-label ms-2" for="remember">Recordar Ingreso</label>
 				</div>
 
-				<button type="submit" class="btn btn-dark btn-block w-100 rounded mt-3 backColor">Enviar</button>
+				<?php 
+				
+					require_once "controllers/admins.controller.php";
+					$login = new AdminsController();
+					$login -> login();
 
+				?>
+
+				<?php else: ?>
+
+					<div class="form-group mb-3">
+						
+						<label for="scode_admin">Código de Seguridad</label>
+
+						<input 
+						type="text"
+						class="form-control rounded mt-2"
+						id="scode_admin"
+						name="scode_admin"
+						placeholder="Escribe el código de seguridad"
+						required
+						>
+
+						<div class="valid-feedback">Válido.</div>
+	    			<div class="invalid-feedback">Campo inválido.</div>
+
+					</div>
 
 				<?php 
 				
-				require_once "controllers/admins.controller.php";
-				$login = new AdminsController();
-				$login -> login();
+					require_once "controllers/admins.controller.php";
+					$login = new AdminsController();
+					$login -> securityCode();
 
 				?>
+
+				<?php endif ?>
+
+				<button type="submit" class="btn btn-dark btn-block w-100 rounded mt-3 backColor">Enviar</button>
+
+
+				
 
 			</form>
 
@@ -93,9 +150,9 @@
 
 </div>
 
-<!--==============================
+<!--====================================
 Modal para recuperar contraseña
-================================-->
+====================================-->
 
 <!-- The Modal -->
 <div class="modal" id="resetPassword">
@@ -156,4 +213,3 @@ Modal para recuperar contraseña
     </div>
   </div>
 </div><!-- The Modal -->
-

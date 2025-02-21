@@ -73,6 +73,7 @@ class InstallController{
 				font_admin TEXT NULL DEFAULT NULL,
 				color_admin TEXT NULL DEFAULT NULL,
 				back_admin TEXT NULL DEFAULT NULL, 
+				scode_admin TEXT NULL DEFAULT NULL, 
 				date_created_admin DATE NULL DEFAULT NULL,
 				date_updated_admin TIMESTAMP on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 				PRIMARY KEY (id_admin))";
@@ -416,6 +417,15 @@ class InstallController{
 							"id_module_column" => $tableModule->results->lastId,
 							"title_column" =>  "back_admin",
 							"alias_column" => "fondo",
+							"type_column" =>  "text",
+							"matrix_column"  => "",
+							"visible_column" => 0,
+							"date_created_column" => date("Y-m-d")
+						],
+						[	
+							"id_module_column" => $tableModule->results->lastId,
+							"title_column" =>  "scode_admin",
+							"alias_column" => "seguridad",
 							"type_column" =>  "text",
 							"matrix_column"  => "",
 							"visible_column" => 0,

@@ -12,7 +12,7 @@ class Connection{
 
 		$infoDB = array(
 
-			"database" => "cms-builder",
+			"database" => "cms-builder", // Hay que cambiar la conección de los tres campos
 			"user" => "root",
 			"pass" => ""
 
@@ -28,7 +28,7 @@ class Connection{
 
 	static public function apikey(){
 
-		return "fgadsfg34fhfgj456erFGHDRG6546hdfhdf";
+		return "fgadsfg34fhfgj456erFGHDRG6546hdfhdf"; // Cambiar la apikey 
 
 	}
 

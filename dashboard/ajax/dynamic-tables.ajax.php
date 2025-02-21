@@ -166,6 +166,7 @@ class DynamicTablesController{
 
     	$HTMLTable = "";
 
+
     	if(!empty($table)){
 
     		foreach(json_decode(json_encode($table),true) as $key => $value){
@@ -176,11 +177,12 @@ class DynamicTablesController{
 						if ($this->rolAdmin == "superadmin" || $module->editable_module == 1){
 
 							$HTMLTable .= '<td>
-								<div class="form-check formCheck">
-									<input class="form-check-input checkItem" type="checkbox" idItem="'.base64_encode($value["id_".$module->suffix_module]).'">
-								</div>
-							</td>';
-						}
+		    					<div class="form-check formCheck">
+		    						<input class="form-check-input checkItem" type="checkbox" idItem="'.base64_encode($value["id_".$module->suffix_module]).'">
+		    					</div>
+		    				</td>';
+
+		    			}
 
 					    foreach ($module->columns as $index => $item){
 
@@ -244,9 +246,9 @@ class DynamicTablesController{
 										<label class="form-check-label ps-1 align-middle" for="mySwitch">'.$label.'</label>
 										</div>';
 
-									}else {
-										$HTMLTable .= '
-										<label class="form-check-label ps-1 align-middle" for="mySwitch">'.$label.'</label>';
+									}else{
+
+										$HTMLTable .= '<label class="form-check-label ps-1 align-middle" for="mySwitch">'.$label.'</label>';
 									}
 
 								/*=============================================
@@ -300,28 +302,41 @@ class DynamicTablesController{
 
 							    	$HTMLTable .= '$'.number_format(urldecode($value[$item->title_column]),2);
 
-										/*=============================================
-										Contenido tipo Relaciones entre tablas
-										=============================================*/
+								/*=============================================
+								Contenido tipo Relaciones
+								=============================================*/
 
 								}else if($item->type_column == "relations"){
 
 									if($item->matrix_column != null && $value[$item->title_column] > 0){
-										
-										$url = "relations?rel=modules,pages&type=module,page&linkTo=type_module,title_module&equalTo=tables,"
-											  .$item->matrix_column."&select=url_page";
+
+										$url = "relations?rel=modules,pages&type=module,page&linkTo=type_module,title_module&equalTo=tables,".$item->matrix_column."&select=url_page,suffix_module";
 										$method = "GET";
 										$array = array();
 
-										$urlPage = CurlController::request($url, $method, $fields)->results[0]->url_page;
+										$urlPage = CurlController::request($url,$method,$fields)->results[0]->url_page;
+										$suffixModule = CurlController::request($url,$method,$fields)->results[0]->suffix_module;
 
-										echo '<a href="'.$urlPage.'/manage/'.base64_encode($value[$item->title_column]).'" target="_blank" class="badge badge-default border rounded bg-indigo">'.$value[$item->title_column].'</a>';
+										$url = $item->matrix_column.'?linkTo=id_'.$suffixModule."&equalTo=".$value[$item->title_column];
+										$relation = CurlController::request($url,$method,$fields);
+										$arrayRelation  = (array)$relation->results[0];
+				
+										$HTMLTable .= '<a href="'.$urlPage.'/manage/'.base64_encode($value[$item->title_column]).'" target="_blank" class="badge badge-default border rounded bg-indigo">'.urldecode($arrayRelation[array_keys($arrayRelation)[1]]).'</a>';
 
 									}else{
 
-										echo $value[$item->title_column]; 
+										$HTMLTable .= $value[$item->title_column]; 
 
 									}
+
+								/*=============================================
+								Contenido tipo Órden
+								=============================================*/
+
+								}else if($item->type_column == "order"){
+
+									$HTMLTable .= '<input type="number" class="form-control form-control-sm rounded changeOrder" value="'.$value[$item->title_column].'" style="width:55px" idItem="'.base64_encode($value["id_".$module->suffix_module]).'" table="'.$module->title_module.'" suffix="'.$module->suffix_module.'" column="'.$item->title_column.'">';
+
 								}else{
 
 	        						$HTMLTable .= TemplateController::reduceText(urldecode($value[$item->title_column]),25); 
@@ -450,6 +465,31 @@ class DynamicTablesController{
 		}
 	}
 
+	/*=============================================
+    Cambiar orden
+    =============================================*/
+
+    public $numOrder;
+    public $idItemOrder;
+    public $tableOrder;
+	public $suffixOrder;
+	public $columnOrder;
+
+	public function changeOrderItems(){
+
+		$url = $this->tableOrder."?id=".base64_decode($this->idItemOrder)."&nameId=id_".$this->suffixOrder."&token=".$this->token."&table=admins&suffix=admin";
+		$method = "PUT";
+		$fields = $this->columnOrder."=".$this->numOrder;
+
+		$updateItem = CurlController::request($url,$method,$fields);
+
+		if($updateItem->status == 200){
+
+			echo 200;
+			
+		}  		
+	
+	}
 
 }
 
@@ -522,4 +562,22 @@ if(isset($_POST["tableSelect"])){
     $ajax -> changeSelectItems();
 
 }
+
+/*=============================================
+Cambiar orden
+=============================================*/
+
+if(isset($_POST["tableOrder"])){
+
+    $ajax = new DynamicTablesController();
+    $ajax -> numOrder = $_POST["numOrder"];
+    $ajax -> idItemOrder = $_POST["idItemOrder"];
+    $ajax -> tableOrder = $_POST["tableOrder"];
+    $ajax -> suffixOrder = $_POST["suffixOrder"];
+    $ajax -> columnOrder = $_POST["columnOrder"];
+    $ajax -> token = $_POST["token"];  
+    $ajax -> changeOrderItems();
+
+}
+
 
